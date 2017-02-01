@@ -1,0 +1,367 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Example 01.01 - Basic skeleton</title>
+    <script src="Scripts/three.min.js"></script>
+    <script src="Scripts/ColladaLoader.js"></script>
+    <script src="Scripts/stats.js"></script>
+    <script src="Scripts/dat.gui.js"></script>
+    <script src="Scripts/TrackballControls.js"></script>
+    <script src="Scripts/FirstPersonControls.js"></script>
+    <script src="Scripts/OrbitControls.js"></script>
+    <script src="Scripts/FlyControls.js"></script>
+    <script src="Scripts/three.min.js"></script>
+    <script src="Scripts/loaders/ctm/lzma.js"></script>
+    <script src="Scripts/loaders/ctm/ctm.js"></script>
+    <script src="Scripts/loaders/ctm/CTMLoader.js"></script>
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to use the
+        complete page */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!-- Div which will hold the Output -->
+    <div id="Stats-output"></div>
+    <div id="WebGL-output"></div>
+    
+<script type="text/javascript">
+
+    var webGLRenderer;
+    var cameraController;
+
+    var rayCaster;
+    var mouse = new THREE.Vector2(), INTERSECTED;
+    var radius = 100;
+    var stopPrinting = true;
+
+    function stop() {
+        stopPrinting = !stopPrinting;
+    }
+
+    function init() {
+
+        var clock = new THREE.Clock();
+
+        var stats = initStats();
+
+        var scene = new THREE.Scene();
+        var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        webGLRenderer = new THREE.WebGLRenderer({ alpha: true });
+        webGLRenderer.setClearColor(0x999999, 0);
+        webGLRenderer.setSize(window.innerWidth, window.innerHeight);
+        //webGLRenderer.shadowMapEnabled = true;
+
+        /*camera.position.x = 150;
+        camera.position.y = 150;
+        camera.position.z = 150;
+        camera.zoom = 0.01;
+        camera.lookAt(new THREE.Vector3(0, 20, 0));*/
+
+        //var spotLight = new THREE.SpotLight(0xf0f0f0);
+        //spotLight.position.set(150, 150, 150);
+        //spotLight.intensity = 2;
+        //scene.add(spotLight);
+
+        document.getElementById("WebGL-output").appendChild(webGLRenderer.domElement);
+
+        var loader = new THREE.CTMLoader();
+        var geometry;
+
+        //loader.load( "SketchupModels/ctm/etagectm.ctm", function (geometry ) {
+        //}, { useWorker: true } );
+
+        var material;
+        loader.load( "SketchupModels/ctm/etagectm.ctm",   function( geometry ) {
+
+            material = new THREE.MeshLambertMaterial( { color: 0xdbdbdb, map: THREE.TextureLoader( "SketchupModels/testtexture.jpg" ), combine: THREE.MixOperation } );
+                    geometry.name = "blue";
+                   callbackModel( geometry, 5, material, -150, 0, 0, 0, 0 ); //-150, 0, 0, 0, 0
+              }, { useWorker: true } );
+
+        function callbackModel( geometry, s, material, x, y, z, rx, ry ) {
+                var mesh = new THREE.Mesh( geometry, material );
+                mesh.position.set( x, y, z );
+                mesh.scale.set( s, s, s );
+                mesh.rotation.x = rx;
+                mesh.rotation.z = ry;
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                scene.add( mesh );
+        }
+
+        camera.position.set(0, 150, 400);
+        camera.zoom = 0.01;
+        //camera.lookAt(new THREE.Vector3(0, 20, 0));
+        camera.lookAt(scene.position);
+
+        /** TEST **/
+            // spotlight #1 -- yellow, dark shadow
+    var spotlight = new THREE.SpotLight(0xffff00);
+    spotlight.position.set(-60,150,-30);
+    spotlight.shadowCameraVisible = true;
+    spotlight.shadowDarkness = 0.95;
+    spotlight.intensity = 2;
+    // must enable shadow casting ability for the light
+    spotlight.castShadow = true;
+    scene.add(spotlight);
+    // spotlight #2 -- red, light shadow
+    var spotlight2 = new THREE.SpotLight(0xff0000);
+    spotlight2.position.set(60,150,-60);
+    scene.add(spotlight2);
+    spotlight2.shadowCameraVisible = true;
+    spotlight2.shadowDarkness = 0.70;
+    spotlight2.intensity = 2;
+    spotlight2.castShadow = true;
+    
+    // spotlight #3
+    var spotlight3 = new THREE.SpotLight(0x0000ff);
+    spotlight3.position.set(150,80,-100);
+    spotlight3.shadowCameraVisible = true;
+    spotlight3.shadowDarkness = 0.95;
+    spotlight3.intensity = 2;
+    spotlight3.castShadow = true;
+    scene.add(spotlight3);
+    // change the direction this spotlight is facing
+    var lightTarget = new THREE.Object3D();
+    lightTarget.position.set(150,10,-100);
+    scene.add(lightTarget);
+    spotlight3.target = lightTarget;
+
+            // create "light-ball" meshes
+    var sphereGeometry = new THREE.SphereGeometry( 10, 16, 8 );
+    var darkMaterial = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+        
+    var wireframeMaterial = new THREE.MeshBasicMaterial( 
+        { color: 0xffff00, wireframe: true, transparent: true } ); 
+    var shape = THREE.SceneUtils.createMultiMaterialObject( 
+        sphereGeometry, [ darkMaterial, wireframeMaterial ] );
+    shape.position = spotlight.position;
+    scene.add( shape );
+    
+    var wireframeMaterial = new THREE.MeshBasicMaterial( 
+        { color: 0xff0000, wireframe: true, transparent: true } ); 
+    var shape = THREE.SceneUtils.createMultiMaterialObject( 
+        sphereGeometry, [ darkMaterial, wireframeMaterial ] );
+    shape.position = spotlight2.position;
+    scene.add( shape );
+    
+    var wireframeMaterial = new THREE.MeshBasicMaterial( 
+        { color: 0x0000ff, wireframe: true, transparent: true } ); 
+    var shape = THREE.SceneUtils.createMultiMaterialObject( 
+        sphereGeometry, [ darkMaterial, wireframeMaterial ] );
+    shape.position = spotlight3.position;
+    scene.add( shape );
+
+    /** END OF TEST **/
+
+        //var loader = new THREE.ObjectLoader();
+        //loader.load('SketchupModels/etageinjson.json',
+        //    function(obj) {
+        //        scene.add(obj);
+        //    });
+
+        //var loader = new THREE.JSONLoader();
+        //loader.load('SketchupModels/etageinjson.json',
+        //    function(geometry, materials) {
+        //        var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+        //        scene.add(mesh);
+        //    });
+
+        //var loader = new THREE.ColladaLoader();
+        //var mesh;
+        //loader.load('SketchupModels/Etage1UtanTexturer.dae', function(result) {
+        //    mesh = result.scene.children[0].children[0].clone();
+        //    mesh.scale.set(4, 4, 4);
+        //    scene.add(mesh);
+        //});
+        //loader.load('SketchupModels/Truck_dae.dae', function (result) {
+        //    mesh = result.scene.children[0].children[0].clone();
+        //    mesh.scale.set(4, 4, 4);
+        //    scene.add(mesh);
+        //});
+
+        var ambientLight = new THREE.AmbientLight(0x999999);
+        scene.add(ambientLight);
+
+        var orbitControls = new THREE.OrbitControls(camera);
+        //var orbitControls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        // Adding floor
+        var floorTexture = new THREE.ImageUtils.loadTexture( 'SketchupModels/testtexture.jpg' );
+        floorTexture.wrapS = floorTexture.wrapT = THREE.RepeatWrapping; 
+        floorTexture.repeat.set( 10, 10 );
+        // Note the change to Lambert material.
+        var floorMaterial = new THREE.MeshLambertMaterial( { map: floorTexture, side: THREE.DoubleSide } );
+        var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        var floorGeometry = new THREE.PlaneGeometry(1000, 1000, 100, 100);
+        floor.position.y = 0;
+        floor.rotation.x = Math.PI / 2;
+        //Note the mesh is flagged to receive shadows
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        /*var trackballControls = new THREE.TrackballControls(camera);
+
+        trackballControls.rotateSpeed = 1.0;
+        trackballControls.rotateSpeed = .15;
+        trackballControls.zoomSpeed = 1.0;
+        trackballControls.panSpeed = 1.0;
+        trackballControls.staticMoving = true; */
+
+        //var camControls = new THREE.FirstPersonControls(camera);
+        //camControls.lookSpeed = 0.4;
+        //camControls.movementSpeed = 20;
+        //camControls.noFly = true;
+        //camControls.lookVertical = true;
+        //camControls.constrainVertical = true;
+        //camControls.verticalMin = 1.0;
+        //camControls.verticalMax = 2.0;
+        //camControls.lon = -150;
+        //camControls.lat = 120;
+
+        //var flyControls = new THREE.FlyControls(camera);
+
+        //flyControls.movementSpeed = 25;
+        //flyControls.domElement = document.querySelector("#WebGL-output");
+        //flyControls.rollSpeed = Math.PI / 24;
+        //flyControls.autoForward = true;
+        //flyControls.dragToLook = false;
+        
+
+        // Change this pointColor variable to change the tone of the model
+        var pointColor = "#c0c0c0";
+        var directionalLight = new THREE.DirectionalLight(pointColor);
+        //directionalLight.position.set(-40, 60, -10);
+        directionalLight.position.set(-10, 0, 0);
+        directionalLight.castShadow = true;
+        directionalLight.shadowCameraNear = 2;
+        directionalLight.shadowCameraFar = 200;
+        directionalLight.shadowCameraLeft = -50;
+        directionalLight.shadowCameraRight = 50;
+        directionalLight.shadowCameraTop = 50;
+        directionalLight.shadowCameraBottom = -50;
+
+        directionalLight.distance = 10; //0
+        directionalLight.intensity = 1; //0.5
+        directionalLight.shadowMapHeight = 1024;
+        directionalLight.shadowMapWidth = 1024;
+
+        scene.add(directionalLight);
+
+
+        // Testing Raycaster on objects
+        rayCaster = new THREE.Raycaster();
+
+        document.addEventListener('mousemove', onDocumentMouseMove, false);
+
+        function onDocumentMouseMove(event) {
+            event.preventDefault();
+
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = (event.clientY / window.innerHeight) * 2 + 1;
+        }
+
+        // Adding testboxes to scene
+        /*var geometry = new THREE.BoxBufferGeometry(20, 20, 20);
+        for (var i = 0; i < 200; i++) {
+            var object = new THREE.Mesh(geometry, new THREE.MeshLambertMaterial({ color: Math.random() * 0xffffff }));
+            object.position.x = Math.random() * 800 - 400;
+            object.position.y = Math.random() * 800 - 400;
+            object.position.z = Math.random() * 800 - 400;
+            object.rotation.x = Math.random() * 2 * Math.PI;
+            object.rotation.y = Math.random() * 2 * Math.PI;
+            object.rotation.z = Math.random() * 2 * Math.PI;
+            object.scale.x = Math.random() + 0.5;
+            object.scale.y = Math.random() + 0.5;
+            object.scale.z = Math.random() + 0.5;
+            scene.add(object);
+        }*/
+
+
+        /*var gui = new dat.GUI();
+        gui.add(controls, 'lightPosX', 0, 1000);
+        gui.add(controls, 'lightPosY', 0, 1000);
+        gui.add(controls, 'lightPosZ', 0, 1000);
+        gui.add(controls, 'lightIntensity', 0, 100);
+        gui.add(controls, 'rotationX', 0, 360);
+        gui.add(controls, 'rotationY', 0, 360);
+        gui.add(controls, 'rotationZ', 0, 360); */
+
+        render();
+
+        var i = 0;
+        function render() {
+            i++;
+            stats.update();
+
+            camera.updateMatrixWorld();
+
+            if (stopPrinting) 
+                if ((i %= 200) == 0) {
+                console.log(scene.children);
+                }
+
+            var delta = clock.getDelta();
+
+            //spotLight.position.x = controls.spotLightPosX;
+            //spotLight.position.y = controls.spotLightPosY;
+            //spotLight.position.z = controls.spotLightPosZ;
+            //spotLight.intensity = controls.spotLightIntensity;
+
+            //camera.lookAt(new THREE.Vector3(controls.rotationX, controls.rotationY, controls.rotationZ));
+
+            // find intersections and cast rays on that object
+
+            rayCaster.setFromCamera(mouse, camera);
+            var intersects = rayCaster.intersectObjects(scene.children);
+            if (intersects.length > 0) {
+                if (INTERSECTED != intersects[0].object) {
+                    if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+
+                    INTERSECTED = intersects[0].object;
+                    INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+                    INTERSECTED.material.emissive.setHex(0xff0000);
+                }
+                //console.log(intersects.length);
+            } else {
+                if (INTERSECTED) INTERSECTED.material.emissive.setHex(INTERSECTED.currentHex);
+                INTERSECTED = null;
+                //console.log("null");
+            }
+
+            //trackballControls.update(delta);
+            orbitControls.update(delta);
+            //camControls.update(delta);
+            //flyControls.update(delta);
+            requestAnimationFrame(render);
+            webGLRenderer.render(scene, camera);
+        }
+
+        function initStats() {
+            var stats = new Stats();
+            stats.setMode(0);
+
+            stats.domElement.style.position = 'absolute';
+            stats.domElement.style.left = '0px';
+            stats.domElement.style.top = '0px';
+
+            document.getElementById("Stats-output").appendChild(stats.domElement);
+
+            return stats;
+        }
+
+        camera.lookAt(scene);
+        console.log("Finished loading");
+    }
+
+    window.onload = init;
+
+
+</script>
+
+</body>
+</html>
