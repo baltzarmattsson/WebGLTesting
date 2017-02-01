@@ -74,8 +74,11 @@
         //loader.load( "SketchupModels/ctm/etagectm.ctm", function (geometry ) {
         //}, { useWorker: true } );
 
+        //var ctmFile = "SketchupModels/ctm/etagectm.ctm";
+        var ctmFile = "SketchupModels/ctm/Stavanger Kulturhus.ctm";
+
         var material;
-        loader.load( "SketchupModels/ctm/etagectm.ctm",   function( geometry ) {
+        loader.load(ctmFile,   function( geometry ) {
 
             material = new THREE.MeshLambertMaterial( { color: 0xdbdbdb, map: THREE.TextureLoader( "SketchupModels/testtexture.jpg" ), combine: THREE.MixOperation } );
                     geometry.name = "blue";
